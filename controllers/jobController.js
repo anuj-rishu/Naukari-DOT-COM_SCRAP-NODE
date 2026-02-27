@@ -21,7 +21,13 @@ const getJobs = async (req, res, next) => {
 
     const jobList = response.data.jobDetails || [];
 
-    const formattedJobs = jobList.map((job) => {
+    // Only include jobs with salary > 0
+    const filteredJobs = jobList.filter(job => {
+      const salary = job.salaryDetail;
+      return salary && ((salary.minimumSalary && salary.minimumSalary > 0) || (salary.maximumSalary && salary.maximumSalary > 0));
+    });
+
+    const formattedJobs = filteredJobs.map((job) => {
       const locationData = job.placeholders?.find((p) => p.type === "location");
 
       return {
@@ -41,7 +47,7 @@ const getJobs = async (req, res, next) => {
     res.json({
       success: true,
       totalJobsInLocation: response.data.noOfJobs,
-      jobsOnThisPage: jobList.length,
+      jobsOnThisPage: formattedJobs.length,
       currentPage: parseInt(page),
       results: formattedJobs,
     });

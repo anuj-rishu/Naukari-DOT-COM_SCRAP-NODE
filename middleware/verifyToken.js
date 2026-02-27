@@ -1,8 +1,6 @@
-const jwt = require("jsonwebtoken");
-const { JWT_SECRET } = require("../config/config");
-
 module.exports = function verifyToken(req, res, next) {
   const authHeader = req.header("Authorization");
+  const tokenHeader = req.header("token");
   const queryToken = req.query.token;
 
   let token;
@@ -10,19 +8,24 @@ module.exports = function verifyToken(req, res, next) {
     token = authHeader.startsWith("Bearer ")
       ? authHeader.substring(7)
       : authHeader;
+  } else if (tokenHeader) {
+    token = tokenHeader.startsWith("Bearer ")
+      ? tokenHeader.substring(7)
+      : tokenHeader;
   } else if (queryToken) {
     token = queryToken;
   }
 
-  if (!token || token === "undefined" || token === "null") {
-    return res.status(401).json({ error: "Token missing or invalid." });
+  if (
+    !token ||
+    token === "undefined" ||
+    token === "null" ||
+    !token.includes("zccpn=") ||
+    !token.includes("zalb_")
+  ) {
+    return res.status(401).json({ error: "Token missing or invalid format." });
   }
 
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch (err) {
-    return res.status(401).json({ error: "Token verification failed." });
-  }
+  req.token = token;
+  next();
 };
