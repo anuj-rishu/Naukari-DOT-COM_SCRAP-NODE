@@ -1,6 +1,6 @@
-const axios = require("axios");
 const config = require("../config/config");
 const { generateJdUrl } = require("../utils/helpers");
+const { fetchWithPuppeteer } = require("../utils/puppeteerScraper");
 
 const getJobs = async (req, res, next) => {
   try {
@@ -12,19 +12,17 @@ const getJobs = async (req, res, next) => {
 
     const apiUrl = `${config.API_BASE_URL}/jobapi/v3/search?noOfResults=20&urlType=search_by_key_loc&searchType=adv&location=${location}&keyword=${keyword}&pageNo=${page}&seoKey=${seoKey}&src=seo_srp`;
 
-    const response = await axios.get(apiUrl, {
-      headers: {
-        ...config.HEADERS,
-        referer: `${config.API_BASE_URL}/${seoKey}`,
-      },
-    });
-
-    const jobList = response.data.jobDetails || [];
+    const responseData = await fetchWithPuppeteer(apiUrl);
+    const jobList = responseData.jobDetails || [];
 
     // Only include jobs with salary > 0
-    const filteredJobs = jobList.filter(job => {
+    const filteredJobs = jobList.filter((job) => {
       const salary = job.salaryDetail;
-      return salary && ((salary.minimumSalary && salary.minimumSalary > 0) || (salary.maximumSalary && salary.maximumSalary > 0));
+      return (
+        salary &&
+        ((salary.minimumSalary && salary.minimumSalary > 0) ||
+          (salary.maximumSalary && salary.maximumSalary > 0))
+      );
     });
 
     const formattedJobs = filteredJobs.map((job) => {
@@ -46,7 +44,7 @@ const getJobs = async (req, res, next) => {
 
     res.json({
       success: true,
-      totalJobsInLocation: response.data.noOfJobs,
+      totalJobsInLocation: responseData.noOfJobs,
       jobsOnThisPage: formattedJobs.length,
       currentPage: parseInt(page),
       results: formattedJobs,
@@ -66,15 +64,10 @@ const getCompanyJobs = async (req, res, next) => {
 
     const apiUrl = `${config.API_BASE_URL}/jobapi/v3/search?noOfResults=${resultsPerPage}&urlType=search_by_company&searchType=adv&groupId=${groupId}&pageNo=${currentPage}&src=jobsearchDesk`;
 
-    const response = await axios.get(apiUrl, {
-      headers: {
-        ...config.HEADERS,
-        referer: `${config.API_BASE_URL}/`,
-      },
-    });
+    const responseData = await fetchWithPuppeteer(apiUrl);
 
-    const jobList = response.data.jobDetails || [];
-    const totalJobs = response.data.noOfJobs || 0;
+    const jobList = responseData.jobDetails || [];
+    const totalJobs = responseData.noOfJobs || 0;
 
     if (jobList.length === 0) {
       return res.status(404).json({

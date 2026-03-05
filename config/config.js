@@ -11,8 +11,7 @@ const config = {
     systemid: "Naukri",
     "user-agent":
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
-    nkparam:
-      "YTaInE5VFOxLIBCwBThpk9FKpkizF6mfRCKjE9NJEEtBYLImu/dHn0EvpEzZKmJsZq0pkbQDYh79GCPCDm0PyQ==",
+    // nkparam is now dynamically handled via Puppeteer in utils/puppeteerScraper.js
   },
 };
 
